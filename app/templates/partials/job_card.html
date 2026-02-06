@@ -1,0 +1,46 @@
+<article class="job-card {{ 'bookmarked' if job.is_bookmarked else '' }} {{ 'applied' if job.is_applied else '' }}">
+    <div class="job-card-header">
+        <div class="job-card-title">
+            <a href="{{ url_for('main.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+            <span class="company">{{ job.company }}</span>
+        </div>
+        <div class="job-card-badges">
+            {% if job.is_bookmarked %}
+            <span class="badge badge-bookmark" title="Bookmarked">*</span>
+            {% endif %}
+            {% if job.is_applied %}
+            <span class="badge badge-applied" title="Applied">A</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="job-card-meta">
+        {% if job.location %}
+        <span class="meta-item location">{{ job.location }}</span>
+        {% endif %}
+        {% if job.job_type %}
+        <span class="meta-item type">{{ job.job_type }}</span>
+        {% endif %}
+        {% if job.salary_text %}
+        <span class="meta-item salary">{{ job.salary_text }}</span>
+        {% endif %}
+    </div>
+
+    <div class="job-card-footer">
+        <span class="source source-{{ job.source }}">{{ job.source }}</span>
+        {% if job.posted_at %}
+        <span class="date">{{ job.posted_at.strftime('%Y-%m-%d') }}</span>
+        {% endif %}
+    </div>
+
+    <div class="job-card-actions">
+        <form action="{{ url_for('main.toggle_bookmark', job_id=job.id) }}" method="POST">
+            <button type="submit" class="btn-icon" title="{{ 'Remove bookmark' if job.is_bookmarked else 'Bookmark' }}">
+                {{ '*' if job.is_bookmarked else '+' }}
+            </button>
+        </form>
+        {% if job.url %}
+        <a href="{{ job.url }}" target="_blank" class="btn-icon" title="View original">&rarr;</a>
+        {% endif %}
+    </div>
+</article>

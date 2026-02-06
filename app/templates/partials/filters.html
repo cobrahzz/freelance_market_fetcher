@@ -1,0 +1,44 @@
+<form class="filters" method="GET" action="{{ url_for('main.dashboard') }}">
+    <div class="filter-group">
+        <label for="search">Search</label>
+        <input type="text" id="search" name="search" value="{{ current_filters.search }}" placeholder="Title, company, description...">
+    </div>
+
+    <div class="filter-group">
+        <label for="source">Source</label>
+        <select id="source" name="source">
+            <option value="">All sources</option>
+            {% for src in sources %}
+            <option value="{{ src }}" {{ 'selected' if current_filters.source == src else '' }}>{{ src }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="job_type">Type</label>
+        <select id="job_type" name="job_type">
+            <option value="">All types</option>
+            <option value="full-time" {{ 'selected' if current_filters.job_type == 'full-time' else '' }}>Full-time</option>
+            <option value="contract" {{ 'selected' if current_filters.job_type == 'contract' else '' }}>Contract</option>
+            <option value="freelance" {{ 'selected' if current_filters.job_type == 'freelance' else '' }}>Freelance</option>
+            <option value="part-time" {{ 'selected' if current_filters.job_type == 'part-time' else '' }}>Part-time</option>
+            <option value="remote" {{ 'selected' if current_filters.job_type == 'remote' else '' }}>Remote</option>
+        </select>
+    </div>
+
+    <div class="filter-group filter-checkboxes">
+        <label>
+            <input type="checkbox" name="bookmarked" value="true" {{ 'checked' if current_filters.bookmarked else '' }}>
+            Bookmarked
+        </label>
+        <label>
+            <input type="checkbox" name="applied" value="true" {{ 'checked' if current_filters.applied else '' }}>
+            Applied
+        </label>
+    </div>
+
+    <div class="filter-actions">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Clear</a>
+    </div>
+</form>

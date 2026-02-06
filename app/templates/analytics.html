@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Analyse du Marché - Freelance Job Fetcher{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+    <div class="analytics-header">
+        <h1>Analyse du Marché</h1>
+        <p class="subtitle">Basé sur {{ analysis.total_jobs }} offres d'emploi</p>
+    </div>
+
+    {% if analysis.total_jobs == 0 %}
+    <div class="no-data">
+        <p>Aucune offre à analyser.</p>
+        <p><a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Retourner au dashboard</a> et récupérer des offres.</p>
+    </div>
+    {% else %}
+
+    <div class="analytics-grid">
+        <!-- Top Technologies -->
+        <div class="analytics-card full-width">
+            <h2>Top 20 Technologies</h2>
+            <div class="chart-container">
+                <canvas id="techChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Salaries -->
+        <div class="analytics-card">
+            <h2>Salaires Moyens</h2>
+            {% if analysis.salaries.sample_size > 0 %}
+            <div class="salary-grid">
+                <div class="salary-item">
+                    <span class="salary-value">{{ "%.0f"|format(analysis.salaries.hourly) }} €</span>
+                    <span class="salary-label">/heure</span>
+                </div>
+                <div class="salary-item">
+                    <span class="salary-value">{{ "%.0f"|format(analysis.salaries.daily) }} €</span>
+                    <span class="salary-label">/jour (TJM)</span>
+                </div>
+                <div class="salary-item">
+                    <span class="salary-value">{{ "%.0f"|format(analysis.salaries.monthly) }} €</span>
+                    <span class="salary-label">/mois</span>
+                </div>
+                <div class="salary-item highlight">
+                    <span class="salary-value">{{ "%.0f"|format(analysis.salaries.yearly) }} €</span>
+                    <span class="salary-label">/an</span>
+                </div>
+            </div>
+            <p class="sample-info">Basé sur {{ analysis.salaries.sample_size }} offres avec salaire</p>
+            {% else %}
+            <p class="no-data-small">Pas assez de données salariales</p>
+            {% endif %}
+        </div>
+
+        <!-- Experience -->
+        <div class="analytics-card">
+            <h2>Expérience Requise</h2>
+            {% if analysis.experience.average_years %}
+            <div class="stat-highlight">
+                <span class="stat-value">{{ analysis.experience.average_years }}</span>
+                <span class="stat-label">années en moyenne</span>
+            </div>
+            {% endif %}
+
+            {% if analysis.experience.levels %}
+            <div class="levels-list">
+                {% for level, count in analysis.experience.levels.items() %}
+                <div class="level-item">
+                    <span class="level-name">{{ level }}</span>
+                    <span class="level-count">{{ count }} offres</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if analysis.experience.distribution %}
+            <div class="chart-container small">
+                <canvas id="expChart"></canvas>
+            </div>
+            {% endif %}
+            <p class="sample-info">{{ analysis.experience.sample_size }} offres mentionnent l'expérience</p>
+        </div>
+
+        <!-- Education -->
+        <div class="analytics-card">
+            <h2>Diplômes Demandés</h2>
+            {% if analysis.education.distribution %}
+            <div class="chart-container small">
+                <canvas id="eduChart"></canvas>
+            </div>
+            <div class="education-list">
+                {% for diploma, count in analysis.education.distribution.items() %}
+                <div class="education-item">
+                    <span class="education-name">{{ diploma }}</span>
+                    <span class="education-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="sample-info">{{ analysis.education.total_with_requirement }} offres sur {{ analysis.education.total_jobs }} mentionnent un diplôme</p>
+            {% else %}
+            <p class="no-data-small">Pas assez de données sur les diplômes</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Data from Flask
+    const techData = {{ analysis.technologies | tojson }};
+    const expData = {{ analysis.experience.distribution | tojson }};
+    const eduData = {{ analysis.education.distribution | tojson }};
+
+    // Tech Chart - Horizontal Bar
+    if (techData && techData.length > 0) {
+        const techCtx = document.getElementById('techChart').getContext('2d');
+        new Chart(techCtx, {
+            type: 'bar',
+            data: {
+                labels: techData.map(t => t[0]),
+                datasets: [{
+                    label: 'Nombre d\'offres',
+                    data: techData.map(t => t[1]),
+                    backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Nombre d\'offres'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Experience Chart - Doughnut
+    if (expData && Object.keys(expData).length > 0) {
+        const expCtx = document.getElementById('expChart').getContext('2d');
+        new Chart(expCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(expData),
+                datasets: [{
+                    data: Object.values(expData),
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Education Chart - Pie
+    if (eduData && Object.keys(eduData).length > 0) {
+        const eduCtx = document.getElementById('eduChart').getContext('2d');
+        new Chart(eduCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(eduData),
+                datasets: [{
+                    data: Object.values(eduData),
+                    backgroundColor: [
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(14, 165, 233, 0.8)',
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(251, 146, 60, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

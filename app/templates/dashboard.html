@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Job Listings</h1>
+        <div class="fetch-controls">
+            <button id="fetch-all" class="btn btn-primary">Fetch All Jobs</button>
+            <span id="fetch-status" class="fetch-status">
+                {% if last_fetch %}
+                    Last fetch: {{ last_fetch.fetched_at.strftime('%Y-%m-%d %H:%M') }}
+                {% else %}
+                    Never fetched
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    {% include "partials/filters.html" %}
+
+    <div class="job-count">
+        Showing {{ jobs.total }} job{{ 's' if jobs.total != 1 else '' }}
+    </div>
+
+    <div class="job-grid">
+        {% for job in jobs.items %}
+            {% include "partials/job_card.html" %}
+        {% else %}
+            <div class="no-jobs">
+                <p>No jobs found.</p>
+                <p>Try <button id="fetch-empty" class="btn btn-primary">fetching jobs</button> or <a href="{{ url_for('main.new_job') }}">add one manually</a>.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if jobs.pages > 1 %}
+    <div class="pagination">
+        {% if jobs.has_prev %}
+            <a href="{{ url_for('main.dashboard', page=jobs.prev_num, **current_filters) }}" class="btn btn-secondary">&laquo; Prev</a>
+        {% endif %}
+
+        <span class="page-info">Page {{ jobs.page }} of {{ jobs.pages }}</span>
+
+        {% if jobs.has_next %}
+            <a href="{{ url_for('main.dashboard', page=jobs.next_num, **current_filters) }}" class="btn btn-secondary">Next &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div id="fetch-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Fetching jobs...</h3>
+        <div class="spinner"></div>
+        <p id="fetch-progress">Please wait...</p>
+    </div>
+</div>
+{% endblock %}

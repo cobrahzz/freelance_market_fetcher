@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} - Freelance Job Fetcher{% endblock %}
+
+{% block content %}
+<div class="job-detail">
+    <div class="job-detail-header">
+        <div class="job-detail-title">
+            <h1>{{ job.title }}</h1>
+            <p class="company">{{ job.company }}</p>
+        </div>
+        <div class="job-detail-actions">
+            <form action="{{ url_for('main.toggle_bookmark', job_id=job.id) }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn {{ 'btn-warning' if job.is_bookmarked else 'btn-secondary' }}">
+                    {{ 'Bookmarked' if job.is_bookmarked else 'Bookmark' }}
+                </button>
+            </form>
+            <form action="{{ url_for('main.toggle_applied', job_id=job.id) }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn {{ 'btn-success' if job.is_applied else 'btn-secondary' }}">
+                    {{ 'Applied' if job.is_applied else 'Mark Applied' }}
+                </button>
+            </form>
+            {% if job.url %}
+            <a href="{{ job.url }}" target="_blank" class="btn btn-primary">View Original</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="job-detail-meta">
+        {% if job.location %}
+        <span class="meta-item">{{ job.location }}</span>
+        {% endif %}
+        {% if job.job_type %}
+        <span class="meta-item">{{ job.job_type }}</span>
+        {% endif %}
+        {% if job.salary_text %}
+        <span class="meta-item">{{ job.salary_text }}</span>
+        {% endif %}
+        <span class="meta-item source-{{ job.source }}">{{ job.source }}</span>
+    </div>
+
+    {% if job.description %}
+    <div class="job-detail-description">
+        <h2>Description</h2>
+        <div class="description-content">{{ job.description | safe }}</div>
+    </div>
+    {% endif %}
+
+    {% if job.notes %}
+    <div class="job-detail-notes">
+        <h2>Your Notes</h2>
+        <p>{{ job.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div class="job-detail-footer">
+        <div class="job-timestamps">
+            {% if job.posted_at %}
+            <span>Posted: {{ job.posted_at.strftime('%Y-%m-%d') }}</span>
+            {% endif %}
+            <span>Added: {{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        </div>
+        <div class="job-actions">
+            <a href="{{ url_for('main.edit_job', job_id=job.id) }}" class="btn btn-secondary">Edit</a>
+            <form action="{{ url_for('main.delete_job', job_id=job.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Delete this job?');">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<a href="{{ url_for('main.dashboard') }}" class="back-link">&larr; Back to jobs</a>
+{% endblock %}
